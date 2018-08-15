@@ -1,5 +1,9 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+"""
+SpaRSA solver
+"""
+
+# Author: Jose P Valdes Herrera <sevmpe@gmail.com>
+# License: BSD 3 clause
 
 import numpy as np
 
