@@ -2,7 +2,7 @@
 Linear model with OWL, l1, l2 regularization
 """
 
-# Author: Jose P Valdes Herrera <sevmpe@gmail.com>
+# Author: Jose P Valdes Herrera <jpvaldesherrera@gmail.com>
 # License: BSD 3 clause
 
 import numpy as np
