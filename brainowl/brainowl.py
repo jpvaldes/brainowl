@@ -154,6 +154,23 @@ def sq_hinge_loss(X, y, w, return_grad=True):
     return obj, grad
 
 
+def modified_huber_loss(X, y, w, return_grad=True):
+    """
+    See Elements of Statistical Learning, p. 427
+    """
+    scores = X @ w
+    z = y * scores
+    obj = -4 * z
+    obj[z >= -1.] = (1 - z[z>=-1]) ** 2
+    obj[z >= 1.] = 0
+    if not return_grad:
+        return obj
+    grad = -4 * y
+    grad[z >= -1.] = -2 * (1 - z[z>=-1]) * y
+    grad[z >= 1.] = 0
+    return obj, grad
+
+
 class SparsaClassifier(BaseEstimator, ClassifierMixin):
     """
     Classifier based on the sparsa_bb solver.
