@@ -287,7 +287,7 @@ class SparsaClassifier(BaseEstimator, ClassifierMixin):
                                self.eta, self.tol, self.memory,
                                self.verbose)
             coeffs[class_num] = this_w
-        return coeffs.T
+        return coeffs
 
     def predict(self, X):
         """
@@ -332,7 +332,7 @@ class SparsaClassifier(BaseEstimator, ClassifierMixin):
         X = check_array(X)
         if len(self.coef_.shape) > 1:
             probabilities = []
-            for col in self.coef_.T:
+            for col in self.coef_:
                 this_proba = sigmoid(X @ col)
                 probabilities.append(this_proba)
             predicted_probabilities = np.array(probabilities).T

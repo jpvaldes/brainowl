@@ -8,10 +8,10 @@ The OWL norm should identify features relevant for the learning problem, even if
 they are correlated. Weight maps based on OWL tend to be sparse, but not so
 sparse like the solutions from LASSO, for example.
 
-# Usage
+# Usage example
 
-There is a Jupyter notebook example with the classic Haxby dataset to show how
-to use the classifier and expected results.
+The included Jupyter notebook contains an example usage of the BrainOwl classifier showing
+how to decode two categories of the classic Haxby dataset.
 
 # Acknowledgments
 
