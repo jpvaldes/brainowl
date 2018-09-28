@@ -382,8 +382,8 @@ class SparsaClassifier(BaseEstimator, ClassifierMixin):
         That means that we can return well calibrated probabilities like we do
         for the log loss.
 
-        The probabilities are not so straightforward to compute. I based this
-        code on the SGD classifier from scikit-learn. The two references there
+        The probabilities are not so straightforward to compute. This code is
+        based on the SGD classifier from scikit-learn. The two references there
         are:
 
         References
