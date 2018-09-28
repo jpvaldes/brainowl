@@ -177,7 +177,7 @@ class SparsaClassifier(BaseEstimator, ClassifierMixin):
 
     Parameters
     ----------
-    loss : str, 'log' or' squared_hinge'
+    loss : str, 'log', 'modified_huber', or 'squared_hinge'
         loss function to use.
     penalty : str, 'owl', 'l1', or, 'l2'
         norm used for the penalty term
@@ -224,6 +224,7 @@ class SparsaClassifier(BaseEstimator, ClassifierMixin):
     """
 
     losses = {'log': log_loss,
+              'modified_huber': modified_huber_loss,
               'squared_hinge': sq_hinge_loss}
     penalties = {'owl': prox_owl,
                  'l1': prox_l1,
@@ -321,7 +322,7 @@ class SparsaClassifier(BaseEstimator, ClassifierMixin):
         """
         check_is_fitted(self, ['X_', 'y_'])
         X = check_array(X)
-        if self.loss == 'log':
+        if self.loss == 'log' or self.loss ==  'modified_huber':
             pp = self.predict_proba(X)
             y_pred = np.argmax(pp, axis=1)
         else:
@@ -345,6 +346,20 @@ class SparsaClassifier(BaseEstimator, ClassifierMixin):
         -------
         probabilities : array, (n_samples, n_clases)
         """
+        error = ("predict_proba only implemented for loss='log'"
+                 " or loss='modified_huber', but"
+                 f" {self.loss} given")
+
+        if self.loss == 'log':
+            pred_prob = self._predict_proba_logloss(X)
+        elif self.loss == 'modified_huber':
+            pred_prob = self._predict_proba_modhuber(X)
+        else:
+            raise NotImplementedError(error)
+
+        return pred_prob
+
+    def _predict_proba_logloss(self, X):
         check_is_fitted(self, ['X_', 'y_'])
         X = check_array(X)
         if len(self.coef_.shape) > 1:
@@ -357,6 +372,58 @@ class SparsaClassifier(BaseEstimator, ClassifierMixin):
         else:
             probabilities = sigmoid(X @ self.coef_.T)
             return np.vstack((1 - probabilities, probabilities)).T
+
+    def _predict_proba_modhuber(self, X):
+        """
+        The modified huber loss ("huberised" square hinge loss in Elements of
+        Statistical Learning) estimates a linear transformation of the
+        posterior probabilities.
+
+        That means that we can return well calibrated probabilities like we do
+        for the log loss.
+
+        The probabilities are not so straightforward to compute. I based this
+        code on the SGD classifier from scikit-learn. The two references there
+        are:
+
+        References
+        ----------
+        Zadrozny and Elkan, "Transforming classifier scores into multiclass
+        probability estimates", SIGKDD'02,
+        http://www.research.ibm.com/people/z/zadrozny/kdd2002-Transf.pdf
+        The justification for the formula in the loss="modified_huber"
+        case is in the appendix B in:
+        http://jmlr.csail.mit.edu/papers/volume2/zhang02c/zhang02c.pdf
+        """
+        scores = self.decision_function(X)
+        binary = len(self.coef_.shape) == 1
+
+        if binary:
+            prob_ = np.ones((scores.shape[0], 2))
+            prob = prob_[:, 1]
+        else:
+            prob = scores
+
+        np.clip(scores, -1, 1, prob)
+        prob += 1.
+        prob /= 2.
+
+        if binary:
+            prob_[:, 0] -= prob
+            prob = prob_
+        else:
+            # work around to produce uniform probabilities because the above
+            # might assign zero prob to all classes
+            prob_sum = prob.sum(axis=1)
+            all_zero = (prob_sum == 0)
+            if np.any(all_zero):
+                prob[all_zero, :] = 1
+                prob_sum[all_zero] = len(self.classes_)
+            # normalize
+            prob /= prob_sum.reshape((prob.shape[0], -1))
+
+        return prob
+
 
     def decision_function(self, X):
         """
