@@ -158,16 +158,24 @@ def modified_huber_loss(X, y, w, return_grad=True):
     """
     See Elements of Statistical Learning, p. 427
     """
+    import warnings
+    warnings.filterwarnings("ignore", category=RuntimeWarning)
     scores = X @ w
+    # print(X.shape)
+    # print('scores: {}'.format(scores.shape))
     z = y * scores
+    # print(z.shape)
     obj = -4 * z
-    obj[z >= -1.] = (1 - z[z>=-1]) ** 2
+    obj[z >= -1.] = (1 - z[z >= -1.]) ** 2
     obj[z >= 1.] = 0
+    obj = obj.sum()
     if not return_grad:
         return obj
     grad = -4 * y
-    grad[z >= -1.] = -2 * (1 - z[z>=-1]) * y
+    grad[z >= -1.] = 2 * (1 - z[z >= -1.]) * -y[z >= -1]
     grad[z >= 1.] = 0
+    grad = X.T @ grad
+    # print('grad: {}'.format(grad.shape))
     return obj, grad
 
 
