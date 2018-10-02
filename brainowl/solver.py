@@ -95,7 +95,10 @@ def sparsa_bb(X, y, x0, reg_w, loss, prox, max_iter=100,
         w = w_proj
         _, grad = loss(X, y, w, True)
         g_diff = grad - grad_prev
-        candidate = (g_diff.T @ g_diff) / (g_diff.T @ diff)
+        graddiff_dot_diff = g_diff.T @ diff
+        # avoid division by 0
+        denominator = graddiff_dot_diff if graddiff_dot_diff != 0 else 1e-20
+        candidate = (g_diff.T @ g_diff) / denominator
         alpha_bb = np.max((1e-10, np.min((candidate, 1e10))))
         # try to break before solution is {0}
         if np.count_nonzero(w) <= 0.05 * w.size:
