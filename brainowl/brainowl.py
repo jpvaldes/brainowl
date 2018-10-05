@@ -410,6 +410,7 @@ class SparsaClassifier(BaseEstimator, ClassifierMixin):
         else:
             prob = scores
 
+        # from Zhang 2002: class_prob = (truncated(scores) + 1) / 2
         np.clip(scores, -1, 1, prob)
         prob += 1.
         prob /= 2.
