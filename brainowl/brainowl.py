@@ -328,7 +328,7 @@ class SparsaClassifier(BaseEstimator, ClassifierMixin):
         """
         check_is_fitted(self, ['X_', 'y_'])
         X = check_array(X)
-        if self.loss == 'log' or self.loss ==  'modified_huber':
+        if self.loss == 'log' or self.loss == 'modified_huber':
             pp = self.predict_proba(X)
             y_pred = np.argmax(pp, axis=1)
         else:
