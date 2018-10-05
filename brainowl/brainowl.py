@@ -165,13 +165,13 @@ def modified_huber_loss(X, y, w, return_grad=True):
     # greater than -1
     idx_gtm1 = z >= -1.
     obj = -4 * z
-    obj[idx_gtm1] = (1 - z[idx_gtm1]) ** 2
+    obj[idx_gtm1] = (1. - z[idx_gtm1]) ** 2
     obj[idx_gt1] = 0
     obj = obj.sum()
     if not return_grad:
         return obj
     grad = -4 * y
-    grad[idx_gtm1] = 2 * (1 - z[idx_gtm1]) * -y[idx_gtm1]
+    grad[idx_gtm1] = 2 * (1. - z[idx_gtm1]) * -y[idx_gtm1]
     grad[idx_gt1] = 0
     grad = X.T @ grad
     return obj, grad
