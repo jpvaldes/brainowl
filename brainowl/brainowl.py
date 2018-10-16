@@ -7,6 +7,7 @@ Linear model with OWL, l1, l2 regularization
 
 import numpy as np
 
+from scipy.special import expit, logit
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.isotonic import isotonic_regression
 from sklearn.preprocessing import LabelBinarizer
@@ -138,7 +139,7 @@ def log_loss(X, y, w, return_grad=True):
     obj = obj.sum()
     if not return_grad:
         return obj
-    prob = sigmoid(y_scores)
+    prob = expit(y_scores)
     grad = np.empty_like(w)
     grad = X.T @ ((prob - 1) * y)
     return obj, grad
@@ -333,12 +334,12 @@ class SparsaClassifier(BaseEstimator, ClassifierMixin):
         if len(self.coef_.shape) > 1:
             probabilities = []
             for col in self.coef_:
-                this_proba = sigmoid(X @ col)
+                this_proba = expit(X @ col)
                 probabilities.append(this_proba)
             predicted_probabilities = np.array(probabilities).T
             return predicted_probabilities
         else:
-            probabilities = sigmoid(X @ self.coef_.T)
+            probabilities = expit(X @ self.coef_.T)
             return np.vstack((1 - probabilities, probabilities)).T
 
     def decision_function(self, X):
