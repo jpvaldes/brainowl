@@ -7,6 +7,7 @@ Linear model with OWL, l1, l2 regularization
 
 import numpy as np
 
+from scipy.special import expit, logit
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.isotonic import isotonic_regression
 from sklearn.preprocessing import LabelBinarizer
@@ -27,7 +28,7 @@ def sigmoid(t):
 
 
 def prox_owl(v, w):
-    """
+    r"""
     OWL norm proximal operator
 
     From pyowl: https://github.com/vene/pyowl/
@@ -97,7 +98,7 @@ def owl_weights(alpha, beta, n_features):
             # OSCAR weights
             return alpha + beta * np.arange(n_features, dtype=np.double)[::-1]
         if beta == 0:
-            # l∞ 
+            # l∞
             coeffs = np.zeros(n_features, dtype=np.double)
             coeffs[0] = alpha
             return coeffs
@@ -138,7 +139,7 @@ def log_loss(X, y, w, return_grad=True):
     obj = obj.sum()
     if not return_grad:
         return obj
-    prob = sigmoid(y_scores)
+    prob = expit(y_scores)
     grad = np.empty_like(w)
     grad = X.T @ ((prob - 1) * y)
     return obj, grad
@@ -171,7 +172,7 @@ def modified_huber_loss(X, y, w, return_grad=True):
     if not return_grad:
         return obj
     grad = -4 * y
-    grad[idx_gtm1] = 2 * (1. - z[idx_gtm1]) * -y[idx_gtm1]
+    grad[idx_gtm1] = 2 * (z[idx_gtm1] - 1.) * y[idx_gtm1]
     grad[idx_gt1] = 0
     grad = X.T @ grad
     return obj, grad
@@ -371,12 +372,12 @@ class SparsaClassifier(BaseEstimator, ClassifierMixin):
         if len(self.coef_.shape) > 1:
             probabilities = []
             for col in self.coef_:
-                this_proba = sigmoid(X @ col)
+                this_proba = expit(X @ col)
                 probabilities.append(this_proba)
             predicted_probabilities = np.array(probabilities).T
             return predicted_probabilities
         else:
-            probabilities = sigmoid(X @ self.coef_.T)
+            probabilities = expit(X @ self.coef_.T)
             return np.vstack((1 - probabilities, probabilities)).T
 
     def _predict_proba_modhuber(self, X):
