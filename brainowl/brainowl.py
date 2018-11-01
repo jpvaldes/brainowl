@@ -157,33 +157,42 @@ def sq_hinge_loss(X, y, w, return_grad=True):
 
 def modified_huber_loss(X, y, w, return_grad=True):
     """
-    See Elements of Statistical Learning, p. 427
+    See Elements of Statistical Learning, p. 427 and "Hybrid huberized
+    support vector machines for microarray classification and gene selection",
+    by Wang et al. 2008 in Bioinformatics.
+
+    The loss function is
+    0, if z > 1
+    (1 - z) ** 2, if 1 - a < z <= 1
+    2 * a * (1 - z) - a ** 2, if z <= 1 - a
+    where the constant a >= 0.
     """
     scores = X @ w
     z = y * scores
-    # # greater than 1
-    idx_gt1 = z >= 1.
-    # # greater than -1
-    # idx_gtm1 = z >= -1.
-    # obj = -4 * z
-    # obj[idx_gtm1] = (1. - z[idx_gtm1]) ** 2
-    # obj[idx_gt1] = 0
-    # obj = obj.sum()
-    # if not return_grad:
-    #     return obj
-    # grad = -4 * y
-    # grad[idx_gtm1] = 2 * (z[idx_gtm1] - 1.) * y[idx_gtm1]
-    # grad[idx_gt1] = 0
-    # grad = X.T @ grad
-    idx_left = z >= -3
-    obj = -8 - 8 * z
-    obj[idx_gt1] = 0
-    obj[idx_left] = (1. - z[idx_left]) ** 2
+    lower_bound = -1
+    # using np.piecewise to get rid of numerical instabilities that appeared
+    # sometimes
+    obj = np.piecewise(
+        z,
+        [z <= lower_bound, z >= 1],
+        [lambda z: -4 * z,
+         lambda z: 0,
+         lambda z: (1 - z) ** 2
+         ]
+    )
+    obj = obj.sum()
     if not return_grad:
         return obj
-    grad = -8 * y
-    grad[idx_gt1] = 0
-    grad[idx_left] = 2 * y[idx_left] * (z[idx_left] - 1)
+    grad = np.piecewise(
+        z,
+        [z <= lower_bound, z >= 1],
+        [lambda z: -4,
+         lambda z: 0,
+         lambda z: 2 * (z - 1)
+         ]
+    )
+    grad *= y
+    grad = X.T @ grad
     return obj, grad
 
 
