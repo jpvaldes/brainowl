@@ -130,6 +130,9 @@ def prox_l2(x, thr):
 
 
 def log_loss(X, y, w, return_grad=True):
+    """
+    Compute the log loss
+    """
     scores = X @ w
     y_scores = y * scores
     idx = y_scores > 0
@@ -146,6 +149,9 @@ def log_loss(X, y, w, return_grad=True):
 
 
 def sq_hinge_loss(X, y, w, return_grad=True):
+    """
+    Compute the squared hinge loss
+    """
     scores = X @ w
     z = np.maximum(0, 1 - y * scores)
     obj = np.sum(z ** 2)
@@ -320,7 +326,12 @@ class SparsaClassifier(BaseEstimator, ClassifierMixin):
         return self
 
     def _fit_multiclass(self, X, y, x_init, penalty_weights, loss_, prox_):
-        # one vs rest multiclass
+        """
+        Use a one vs rest scheme to fit multiclass problems.
+
+        The first dimension of the returned coefficient matrix corresponds to
+        the number of classes.
+        """
         n_classes = y.shape[1]
         n_voxels = X.shape[1]
         coeffs = np.zeros((n_classes, n_voxels))
@@ -385,6 +396,19 @@ class SparsaClassifier(BaseEstimator, ClassifierMixin):
         return pred_prob
 
     def _predict_proba_logloss(self, X):
+        """
+        Predict the class probability of samples is the loss used is the log
+        loss.
+
+        Parameters
+        ----------
+        X : array, (n_samples, n_classes)
+            Data samples.
+
+        Returns
+        -------
+        probabilities : array, (n_samples, n_classes)
+        """
         check_is_fitted(self, ['X_', 'y_'])
         X = check_array(X)
         if len(self.coef_.shape) > 1:
@@ -400,6 +424,20 @@ class SparsaClassifier(BaseEstimator, ClassifierMixin):
 
     def _predict_proba_modhuber(self, X):
         """
+        Predict the class probability of samples is the loss used is the
+        modified Huber loss.
+
+        Parameters
+        ----------
+        X : array, (n_samples, n_classes)
+            Data samples.
+
+        Returns
+        -------
+        probabilities : array, (n_samples, n_classes)
+
+        Notes
+        -----
         The modified huber loss ("huberised" square hinge loss in Elements of
         Statistical Learning) estimates a linear transformation of the
         posterior probabilities.
