@@ -28,7 +28,7 @@ def sigmoid(t):
 
 
 def prox_owl(v, w):
-    """
+    r"""
     OWL norm proximal operator
 
     From pyowl: https://github.com/vene/pyowl/
@@ -98,7 +98,7 @@ def owl_weights(alpha, beta, n_features):
             # OSCAR weights
             return alpha + beta * np.arange(n_features, dtype=np.double)[::-1]
         if beta == 0:
-            # l∞ 
+            # l∞
             coeffs = np.zeros(n_features, dtype=np.double)
             coeffs[0] = alpha
             return coeffs
@@ -155,13 +155,54 @@ def sq_hinge_loss(X, y, w, return_grad=True):
     return obj, grad
 
 
+def modified_huber_loss(X, y, w, return_grad=True):
+    """
+    See Elements of Statistical Learning, p. 427 and "Hybrid huberized
+    support vector machines for microarray classification and gene selection",
+    by Wang et al. 2008 in Bioinformatics.
+
+    The loss function is
+    0, if z > 1
+    (1 - z) ** 2, if 1 - a < z <= 1
+    2 * a * (1 - z) - a ** 2, if z <= 1 - a
+    where the constant a >= 0.
+    """
+    scores = X @ w
+    z = y * scores
+    lower_bound = -1
+    # using np.piecewise to get rid of numerical instabilities that appeared
+    # sometimes
+    obj = np.piecewise(
+        z,
+        [z <= lower_bound, z >= 1],
+        [lambda z: -4 * z,
+         lambda z: 0,
+         lambda z: (1 - z) ** 2
+         ]
+    )
+    obj = obj.sum()
+    if not return_grad:
+        return obj
+    grad = np.piecewise(
+        z,
+        [z <= lower_bound, z >= 1],
+        [lambda z: -4,
+         lambda z: 0,
+         lambda z: 2 * (z - 1)
+         ]
+    )
+    grad *= y
+    grad = X.T @ grad
+    return obj, grad
+
+
 class SparsaClassifier(BaseEstimator, ClassifierMixin):
     """
     Classifier based on the sparsa_bb solver.
 
     Parameters
     ----------
-    loss : str, 'log' or' squared_hinge'
+    loss : str, 'log', 'modified_huber', or 'squared_hinge'
         loss function to use.
     penalty : str, 'owl', 'l1', or, 'l2'
         norm used for the penalty term
@@ -208,6 +249,7 @@ class SparsaClassifier(BaseEstimator, ClassifierMixin):
     """
 
     losses = {'log': log_loss,
+              'modified_huber': modified_huber_loss,
               'squared_hinge': sq_hinge_loss}
     penalties = {'owl': prox_owl,
                  'l1': prox_l1,
@@ -329,6 +371,20 @@ class SparsaClassifier(BaseEstimator, ClassifierMixin):
         -------
         probabilities : array, (n_samples, n_clases)
         """
+        error = ("predict_proba only implemented for loss='log'"
+                 " or loss='modified_huber', but"
+                 f" {self.loss} given")
+
+        if self.loss == 'log':
+            pred_prob = self._predict_proba_logloss(X)
+        elif self.loss == 'modified_huber':
+            pred_prob = self._predict_proba_modhuber(X)
+        else:
+            raise NotImplementedError(error)
+
+        return pred_prob
+
+    def _predict_proba_logloss(self, X):
         check_is_fitted(self, ['X_', 'y_'])
         X = check_array(X)
         if len(self.coef_.shape) > 1:
@@ -341,6 +397,59 @@ class SparsaClassifier(BaseEstimator, ClassifierMixin):
         else:
             probabilities = expit(X @ self.coef_.T)
             return np.vstack((1 - probabilities, probabilities)).T
+
+    def _predict_proba_modhuber(self, X):
+        """
+        The modified huber loss ("huberised" square hinge loss in Elements of
+        Statistical Learning) estimates a linear transformation of the
+        posterior probabilities.
+
+        That means that we can return well calibrated probabilities like we do
+        for the log loss.
+
+        The probabilities are not so straightforward to compute. This code is
+        based on the SGD classifier from scikit-learn. The two references there
+        are:
+
+        References
+        ----------
+        Zadrozny and Elkan, "Transforming classifier scores into multiclass
+        probability estimates", SIGKDD'02,
+        http://www.research.ibm.com/people/z/zadrozny/kdd2002-Transf.pdf
+        The justification for the formula in the loss="modified_huber"
+        case is in the appendix B in:
+        http://jmlr.csail.mit.edu/papers/volume2/zhang02c/zhang02c.pdf
+        """
+        scores = self.decision_function(X)
+        binary = len(self.coef_.shape) == 1
+
+        if binary:
+            prob_ = np.ones((scores.shape[0], 2))
+            prob = prob_[:, 1]
+        else:
+            prob = scores
+
+        # from Zhang 2002: class_prob = (truncated(scores) + 1) / 2
+        np.clip(scores, -1, 1, prob)
+        prob += 1.
+        prob /= 2.
+
+        if binary:
+            prob_[:, 0] -= prob
+            prob = prob_
+        else:
+            # work around to produce uniform probabilities because the above
+            # might assign zero prob to all classes
+            prob_sum = prob.sum(axis=1)
+            all_zero = (prob_sum == 0)
+            if np.any(all_zero):
+                prob[all_zero, :] = 1
+                prob_sum[all_zero] = len(self.classes_)
+            # normalize
+            prob /= prob_sum.reshape((prob.shape[0], -1))
+
+        return prob
+
 
     def decision_function(self, X):
         """
