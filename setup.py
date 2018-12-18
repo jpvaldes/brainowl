@@ -14,7 +14,7 @@ DOWNLOAD_URL = 'https://github.com/jpvaldes/brainowl.git'
 EMAIL = 'jpvaldesherrera@gmail.com'
 AUTHOR = 'Jose P Valdes Herrera'
 REQUIRES_PYTHON = '>=3.5.0'
-REQUIRES_PACKAGES = ['numpy', 'scikit-learn']
+REQUIRES_PACKAGES = ['numpy', 'scipy', 'scikit-learn']
 
 HERE = path.abspath(path.dirname(__file__))
 
