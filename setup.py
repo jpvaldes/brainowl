@@ -27,7 +27,7 @@ setup(
     description=DESCRIPTION,
     long_description=LONG_DESCRIPTION,
     long_description_content_type='text/markdown',
-    packages=['brainowl'],
+    packages=[NAME],
     license='BSD (3-clause)',
     author=AUTHOR,
     author_email=EMAIL,
@@ -41,5 +41,8 @@ setup(
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
         'Intended Audience :: Science/Research',
+        'Development Status :: 3 - Alpha',
+        'Topic :: Scientific/Engineering',
+        'Topic :: Software Development',
     ],
 )
