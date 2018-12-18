@@ -1,0 +1,12 @@
+# what to include in the source distribution not included by default
+# readme file (by default md not included)
+include README.md
+
+# license
+include LICENSE
+
+# Patterns to exclude from any directory
+global-exclude *~
+global-exclude *.py[co]
+global-exclude .git
+global-exclude .ipynb_checkpoints
