@@ -14,6 +14,7 @@ DOWNLOAD_URL = 'https://github.com/jpvaldes/brainowl.git'
 EMAIL = 'jpvaldesherrera@gmail.com'
 AUTHOR = 'Jose P Valdes Herrera'
 REQUIRES_PYTHON = '>=3.5.0'
+REQUIRES_PACKAGES = ['numpy', 'scikit-learn']
 
 HERE = path.abspath(path.dirname(__file__))
 
@@ -31,6 +32,7 @@ setup(
     author=AUTHOR,
     author_email=EMAIL,
     python_requires=REQUIRES_PYTHON,
+    install_requires=REQUIRES_PACKAGES,
     download_url=DOWNLOAD_URL,
     classifiers=[
         # Trove classifiers
