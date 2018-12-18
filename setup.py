@@ -12,11 +12,14 @@ EMAIL = 'jpvaldesherrera@gmail.com'
 AUTHOR = 'Jose P Valdes Herrera'
 REQUIRES_PYTHON = '>=3.5.0'
 
+with open('README.md', 'r') as readme_file:
+    long_description = readme_file.read()
+
 setup(
     name=NAME,
     version='0.1dev',
     description=DESCRIPTION,
-    long_description=open('README.md').read(),
+    long_description=long_description,
     long_description_content_type='text/markdown',
     packages=['brainowl'],
     license='BSD (3-clause)',
