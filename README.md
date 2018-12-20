@@ -8,6 +8,20 @@ The OWL norm should identify features relevant for the learning problem, even if
 they are correlated. Weight maps based on OWL tend to be sparse, but not so
 sparse like the solutions from LASSO, for example.
 
+# Install
+
+Clone the repository using `git`:
+
+``` {.bash}
+git clone https://github.com/jpvaldes/brainowl.git
+```
+
+Install using `pip` (be sure you have python 3):
+
+``` {.bash}
+pip install -e ./brainowl
+```
+
 # Usage example
 
 The included Jupyter notebook contains an example usage of the BrainOwl classifier showing
