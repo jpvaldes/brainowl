@@ -23,7 +23,7 @@ with open(path.join(HERE, 'README.md'), 'r') as readme_file:
 
 setup(
     name=NAME,
-    version='0.1dev',
+    version='0.1',
     description=DESCRIPTION,
     long_description=LONG_DESCRIPTION,
     long_description_content_type='text/markdown',
