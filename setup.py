@@ -33,6 +33,7 @@ setup(
     author_email=EMAIL,
     python_requires=REQUIRES_PYTHON,
     install_requires=REQUIRES_PACKAGES,
+    url=URL,
     download_url=DOWNLOAD_URL,
     classifiers=[
         # Trove classifiers
